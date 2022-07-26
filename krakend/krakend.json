@@ -1,0 +1,22 @@
+{
+    "$schema": "https://www.krakend.io/schema/v3.json",
+    "version": 3,
+    "endpoints": [
+        {
+          "endpoint": "/segment",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/segment",
+              "host": ["http://segment_gen:9000"]
+            },
+            {
+              "url_pattern": "/storesegmentsub",
+              "host": ["http://segment_store:8023"]
+            }
+          ]
+        }
+        
+    ],
+    "extra_config": {}
+}

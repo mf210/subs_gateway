@@ -1,0 +1,64 @@
+version: "3.3"
+
+services:
+  segment_store:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8023
+    volumes:
+      - .:/store_subs
+    ports:
+      - 8023:8023
+    environment:
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PWD=${MONGO_PWD}
+    logging:
+        driver: "json-file"
+        options:
+            max-file: "5"
+            max-size: "10m"
+    restart: always
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo:5.0
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PWD}
+    ports:
+      - 27018:27017
+    logging:
+        driver: "json-file"
+        options:
+            max-file: "5"
+            max-size: "10m"
+    restart: always
+  segment_gen:
+    build:
+      context: /root/mono.segmentation
+      dockerfile: Dockerfile
+    ports:
+      - 8024:9000
+    logging:
+        driver: "json-file"
+        options:
+            max-file: "5"
+            max-size: "10m"
+  krakend:
+    image: devopsfaith/krakend
+    volumes:
+      - ./krakend:/etc/krakend
+    ports:
+      - 8087:8080
+    command: ["run", "-d", "-c", "/etc/krakend/krakend.json"]
+    logging:
+        driver: "json-file"
+        options:
+            max-file: "5"
+            max-size: "10m"
+    depends_on:
+      - segment_store
+      - segment_gen
+volumes:
+  mongodb_data:
